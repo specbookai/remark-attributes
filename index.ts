@@ -1,14 +1,24 @@
 import type {Root} from 'mdast'
 import type {Extension as FromMarkdownExtension} from 'mdast-util-from-markdown'
+import type {Options as ToMarkdownExtension} from 'mdast-util-to-markdown'
 import type {Processor, Transformer} from 'unified'
-import {micromarkAttributes} from './packages/micromark-attributes/index.js'
-import {mdastAttributes} from './packages/mdast-attributes/index.js'
+
 import {attributesTransformer} from './packages/attributes-transformer/index.js'
+import {
+  mdastAttributes,
+  mdastAttributesToMarkdown
+} from './packages/mdast-attributes/index.js'
+import {micromarkAttributes} from './packages/micromark-attributes/index.js'
 import {AttributesExtension} from './util/types.js'
 
 interface AttributesData {
   micromarkExtensions?: AttributesExtension[]
   fromMarkdownExtensions?: FromMarkdownExtension[]
+  toMarkdownExtensions?: ToMarkdownExtension[]
+}
+
+interface RemarkAttributesOptions {
+  mdx?: boolean
 }
 
 /**
@@ -17,7 +27,7 @@ interface AttributesData {
  */
 export default function remarkAttributes(
   this: Processor<Root, Root, Root, string>,
-  options = {mdx: false}
+  options: RemarkAttributesOptions = {mdx: false}
 ): Transformer<Root> {
   const data = this.data() as AttributesData
 
@@ -31,6 +41,7 @@ export default function remarkAttributes(
 
   add('micromarkExtensions', micromarkAttributes({escaped: options.mdx}))
   add('fromMarkdownExtensions', mdastAttributes())
+  add('toMarkdownExtensions', mdastAttributesToMarkdown())
 
-  return attributesTransformer
+  return (root) => attributesTransformer(root)
 }

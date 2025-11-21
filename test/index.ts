@@ -2,21 +2,25 @@
  * @typedef {import('mdast').Root} Root
  */
 
+import {createElement} from 'react'
+
 import fs from 'node:fs'
 import path from 'node:path'
-import test from 'tape'
-import {readSync} from 'to-vfile'
-import {unified} from 'unified'
-import {remark} from 'remark'
-import {evaluateSync} from '@mdx-js/mdx'
-import type {EvaluateOptions} from '@mdx-js/mdx'
-import html from 'remark-rehype'
-import gfm from 'remark-gfm'
-import stringify from 'rehype-stringify'
+
 import {isHidden} from 'is-hidden'
 import {renderToString} from 'react-dom/server'
 import * as runtime from 'react/jsx-runtime'
-import {createElement} from 'react'
+import stringify from 'rehype-stringify'
+import {remark} from 'remark'
+import gfm from 'remark-gfm'
+import html from 'remark-rehype'
+import test from 'tape'
+import {readSync} from 'to-vfile'
+import {unified} from 'unified'
+
+import type {EvaluateOptions} from '@mdx-js/mdx'
+import {evaluateSync} from '@mdx-js/mdx'
+
 import remarkAttributes from '../index.js'
 
 test('directive()', (t) => {
@@ -30,7 +34,6 @@ test('directive()', (t) => {
 
   t.end()
 })
-
 const testBase = path.join('test', 'positive')
 
 test('fixtures with md', (t) => {
@@ -398,4 +401,28 @@ test('match markdown-it-attrs', async (st) => {
       st.end()
     })
   }
+})
+
+test('restringify', (t) => {
+  const cases = [
+    ['text{.red}', 'text{.red}\n'],
+    ['text{#id}', 'text{#id}\n'],
+    ['text{.red #id}', 'text{#id .red}\n'],
+    ['text{#id .red}', 'text{#id .red}\n'],
+    ['text{data-page=1}', 'text{data-page="1"}\n'],
+    ['# title{.cls}', '# title{.cls}\n'],
+    ['- item{.cls}', '* item{.cls}\n'],
+    // ['`code`{.cls}', '`code`{.cls}\n'],
+    ['![alt](img.png){.cls}', '![alt](img.png){.cls}\n'],
+    ['[link](url){.cls}', '[link](url){.cls}\n'],
+    ['**bold**{.cls}', '**bold**{.cls}\n'],
+    ['*italic*{.cls}', '*italic*{.cls}\n']
+  ]
+
+  const proc = remark().use(remarkAttributes).freeze()
+
+  cases.forEach(([src, expected]) => {
+    t.equal(String(proc.processSync(src)), expected, `should preserve attributes for ${src}`)
+  })
+  t.end()
 })

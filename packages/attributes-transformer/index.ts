@@ -1,6 +1,6 @@
-import {visit} from 'unist-util-visit'
-import {Node, Parent} from 'unist'
 import parseAttrs from 'md-attr-parser'
+import {Node, Parent} from 'unist'
+import {visit} from 'unist-util-visit'
 
 type AttrsNode = {
   type: 'attrs'
@@ -42,7 +42,10 @@ export function attributesTransformer(root: any): void {
               ...parseAttrs(attrNode.value).prop
             }
           }
-          children.splice(index, 1)
+          const currentIdx = children.indexOf(attrNode)
+          if (currentIdx > -1) {
+            children.splice(currentIdx, 1)
+          }
         }
       }
     }
@@ -80,7 +83,10 @@ export function attributesTransformer(root: any): void {
         }
       }
 
-      parent.children.splice(index, 1)
+      const currentIdx = parent.children.indexOf(node)
+      if (currentIdx > -1) {
+        parent.children.splice(currentIdx, 1)
+      }
     }
   )
 }

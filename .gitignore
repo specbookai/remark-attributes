@@ -6,3 +6,4 @@ node_modules/
 !typings/*.d.ts
 dist
 .idea
+.yarn
